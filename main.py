@@ -18,7 +18,15 @@ def health_check():
     return {"status": "online", "agent": "Forge-Bot", "station": "arrived"}
 
 @app.post("/slack/events")
+@app.post("/slack/events")
 async def slack_events(request: Request):
+    data = await request.json()
+    
+    # This is the "Challenge" fix Slack is looking for
+    if "challenge" in data:
+        return {"challenge": data["challenge"]}
+        
+    return {"status": "ok"}
     # This handles the Slack handshake and commands
     body = await request.body()
     return {"status": "ok"}
