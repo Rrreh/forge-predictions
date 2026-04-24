@@ -1,36 +1,36 @@
 import os
-from fastapi import FastAPI, Request
-from slack_sdk import WebClient
-from slack_sdk.signature import SignatureVerifier
+from slack_sdk.web import WebClient
+from slack_sdk.socket_mode import SocketModeClient
+from slack_sdk.socket_mode.response import SocketModeResponse
+from slack_sdk.socket_mode.request import SocketModeRequest
 
-app = FastAPI()
+# Initialize clients
+web_client = WebClient(token=os.environ.get("SLACK_BOT_TOKEN"))
+app_token = os.environ.get("SLACK_APP_TOKEN")
 
-# Railway will provide these via your Variables tab
-SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
-SLACK_SIGNING_SECRET = os.environ.get("SLACK_SIGNING_SECRET")
+def process(client: SocketModeClient, req: SocketModeRequest):
+    if req.type == "events_api":
+        event = req.payload.get("event", {})
+        text = event.get("text", "")
+        channel_id = event.get("channel")
 
-client = WebClient(token=SLACK_BOT_TOKEN)
-verifier = SignatureVerifier(SLACK_SIGNING_SECRET)
+        # Command Routing
+        if text.startswith("!triage") or text.startswith("!predict"):
+            web_client.chat_postMessage(
+                channel=channel_id, 
+                text="🚀 Forge is analyzing the latest market_edges.json..."
+            )
+            # Add your logic here to read JSON and reply
 
-@app.get("/health")
-def health_check():
-    # Railway uses this to confirm the "Train has arrived"
-    return {"status": "online", "agent": "Forge-Bot", "station": "arrived"}
-@app.post("/slack/events")
-async def slack_events(request: Request):
-    data = await request.json()
-    
-    # This is the "Challenge" fix Slack is looking for
-    if "challenge" in data:
-        return {"challenge": data["challenge"]}
-        
-    return {"status": "ok"}
-    # This handles the Slack handshake and commands
-    body = await request.body()
-    return {"status": "ok"}
+        # Acknowledge the event to Slack
+        response = SocketModeResponse(envelope_id=req.envelope_id)
+        client.send_socket_mode_response(response)
 
-if __name__ == "__main__":
-    import uvicorn
-    # Railway provides the PORT variable automatically
-    port = int(os.environ.get("PORT", 8080))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+# Connect and stay alive
+rtm_client = SocketModeClient(app_token=app_token, web_client=web_client)
+rtm_client.socket_mode_request_listeners.append(process)
+rtm_client.connect()
+
+from threading import Event
+Event().wait()  # Keeps the script running continuously on Railway
+
