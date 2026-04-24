@@ -16,8 +16,6 @@ verifier = SignatureVerifier(SLACK_SIGNING_SECRET)
 def health_check():
     # Railway uses this to confirm the "Train has arrived"
     return {"status": "online", "agent": "Forge-Bot", "station": "arrived"}
-
-@app.post("/slack/events")
 @app.post("/slack/events")
 async def slack_events(request: Request):
     data = await request.json()
