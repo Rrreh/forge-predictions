@@ -1,5 +1,6 @@
 import os
 import time
+import threading
 from slack_sdk.socket_mode import SocketModeClient
 from slack_sdk.web import WebClient
 from slack_sdk.socket_mode.response import SocketModeResponse
@@ -36,3 +37,4 @@ def process_event(client, req):
 
 client.socket_mode_request_listeners.append(process_event)
 client.connect()
+threading.Event().wait()
