@@ -5,7 +5,6 @@ from slack_sdk.signature import SignatureVerifier
 
 app = FastAPI()
 
-# Tokens from your Railway Variables
 SLACK_BOT_TOKEN = os.environ.get("SLACK_BOT_TOKEN")
 SLACK_SIGNING_SECRET = os.environ.get("SLACK_SIGNING_SECRET")
 
@@ -14,11 +13,10 @@ verifier = SignatureVerifier(SLACK_SIGNING_SECRET)
 
 @app.get("/health")
 def health_check():
-    return {"status": "online", "agent": "Forge-Bot", "station": "arrived"}
+    return {"status": "online", "agent": "Forge-Bot"}
 
 @app.post("/slack/events")
 async def slack_events(request: Request):
-    # This handles the handshake and commands
     body = await request.body()
     return {"status": "ok"}
 
