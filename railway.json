@@ -1,4 +1,5 @@
 {
+  "$schema": "https://railway.com/railway.schema.json",
   "deploy": {
     "startCommand": "python forge_socket_listener.py",
     "restartPolicyType": "ON_FAILURE",
